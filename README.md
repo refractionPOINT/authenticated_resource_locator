@@ -4,10 +4,10 @@ Describes a way to specify access to a remote resource, supporting many methods,
 
 Currently supported (method: auths):
 
-* http: basic, bearer, token, otx, None
-* https: basic, bearer, token, otx, None
-* gcs: gaia
-* github: token, None
+* **http**: basic, bearer, token, otx, None
+* **https**: basic, bearer, token, otx, None
+* **gcs**: gaia
+* **github**: token, None
 
 On GitHub, all files within the repo (or subdirectory) of the repo will be iterated on via the REST API.
 
