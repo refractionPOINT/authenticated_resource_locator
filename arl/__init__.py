@@ -1,0 +1,1 @@
+from .AuthenticatedResourceLocator import AuthenticatedResourceLocator
