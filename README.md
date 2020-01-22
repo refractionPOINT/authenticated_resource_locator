@@ -33,6 +33,8 @@ Access using Authentication token: `[https,my.corpwebsite.com/resourdata,token,b
 
 Google Cloud Storage: `[gcs,my-bucket-name/some-blob-prefix,gaia,base64(GCP_SERVICE_KEY)]`
 
+GitHub repo: `[github,my-org/my-repo-name,token,bfuihferhf8erh7ubhfey7g3y4bfurbfhrb]`
+
 You can also omit the auth components to just describe a method: `[https,my.corpwebsite.com/resourdata]`
 
 ## Return Value
