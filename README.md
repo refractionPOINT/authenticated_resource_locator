@@ -45,6 +45,8 @@ source.
 
 ## Example
 
+Install: `pip install arl`
+
 ```python
 from arl import AuthenticatedResourceLocator as ARL
 resource = "[https,example.com/my-resource,basic,my-user:my-password]
