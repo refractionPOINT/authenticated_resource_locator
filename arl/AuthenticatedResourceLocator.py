@@ -110,7 +110,7 @@ class AuthenticatedResourceLocator( object ):
         if self._authType is None:
             response = requests.get( fullUrl )
         elif 'basic' == self._authType:
-            userName, password = self._authData.split( ':' )
+            userName, password = self._authData.split( ':', 1 )
             response = requests.get( fullUrl, auth = HTTPBasicAuth( userName, password ) )
         elif 'bearer' == self._authType:
             response = requests.get( fullUrl, headers = { 'Authorization' : "bearer %s" % ( self._authData, ) } )
