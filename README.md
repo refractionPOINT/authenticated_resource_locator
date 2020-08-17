@@ -33,6 +33,8 @@ Access using Authentication token: `[https,my.corpwebsite.com/resourdata,token,b
 
 Google Cloud Storage: `[gcs,my-bucket-name/some-blob-prefix,gaia,base64(GCP_SERVICE_KEY)]`
 
+GitHub repo: `[github,my-org/my-repo-name,token,bfuihferhf8erh7ubhfey7g3y4bfurbfhrb]`
+
 You can also omit the auth components to just describe a method: `[https,my.corpwebsite.com/resourdata]`
 
 ## Return Value
@@ -44,6 +46,8 @@ files will be generated where fileName will be a complete path from the
 source.
 
 ## Example
+
+Install: `pip install arl`
 
 ```python
 from arl import AuthenticatedResourceLocator as ARL
