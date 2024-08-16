@@ -113,7 +113,9 @@ def test_githubSigleFileNoAuth():
     assert( 1 == nElemFound )
 
 # def test_githubAuth():
-#     testArl = "[github,refractionPOINT/replicant,token,f1eb898f...]"
+# with open('<INSERT SSH KEY PATH', 'r') as file:
+#        data = file.read()
+#    testArl = "[github,refractionPOINT/go-limacharlie,ssh,%s]" % (data)
 #     nElemFound = 0
 #     with ARL( testArl ) as r:
 #         for fileName, fileContent in r:
