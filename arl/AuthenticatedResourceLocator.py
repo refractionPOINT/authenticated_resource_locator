@@ -249,8 +249,6 @@ class AuthenticatedResourceLocator( object ):
                     files = [os.path.join(dirpath, f) for f in filenames]
                     files_to_parse += files
 
-                # filenames = [os.path.join(dirpath,f) for (dirpath, dirnames, filenames) in os.walk(tmp_dir_path, topdown=True) for f in filenames]
-                print(files_to_parse)
                 for f in files_to_parse:
                     with open(f,'r', errors="ignore") as file:
                         file_path = os.path.relpath(f, tmp_dir_path)
