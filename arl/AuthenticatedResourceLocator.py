@@ -3,6 +3,7 @@ import gevent.pool
 
 import base64
 import json
+import os
 import tempfile
 import requests
 from requests.auth import HTTPBasicAuth
@@ -10,6 +11,10 @@ import tarfile
 import zipfile
 import google.cloud.storage
 from google.oauth2 import service_account
+from paramiko import RSAKey, DSSKey, ECDSAKey, Ed25519Key
+import dulwich
+from dulwich import porcelain
+from dulwich.contrib.paramiko_vendor import ParamikoSSHVendor
 
 class AuthenticatedResourceLocator( object ):
     _supportedMethods = {
@@ -30,6 +35,7 @@ class AuthenticatedResourceLocator( object ):
         ) ),
         'github' : set( (
             'token',
+            'ssh',
         ) ),
     }
 
@@ -207,61 +213,96 @@ class AuthenticatedResourceLocator( object ):
         fullUrl = 'https://api.github.com/repos/%s/%s/contents/' % ( repoOwner, repoName )
 
         headers = None
-        if self._authType is None:
+        if self._authType is None or self._authType == "ssh":
             pass
         elif 'token' == self._authType:
             headers = { 'Authorization' : "token %s" % ( self._authData, ) }
         else:
             raise NotImplementedError( "Auth %s not supported." % ( self._authType, ) )
 
-        def _listAllGithubFiles( subPath, allPaths, repoParams ):
-            thisUrl = '%s%s%s%s' % ( fullUrl, '/' if subPath != '' else '', subPath, repoParams )
-            response = requests.get( thisUrl, headers = headers )
-            response.raise_for_status()
+        if self._authType == 'ssh':
+             with tempfile.TemporaryDirectory() as tmp_dir_path:
+                repo_url = "git@github.com:%s/%s.git" % (repoOwner, repoName)
+                private_key = self._authData
 
-            files = response.json()
+                pkey = None
+                for pkey_class in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+                    try:
+                        pkey = pkey_class.from_private_key(private_key)
+                        break
+                    except:
+                        pass
+                ssh_kwargs = {"pkey": pkey}
 
-            # If the listing path was a single file
-            # we normalize it.
-            if isinstance( files, dict ):
-                files = [ files ]
+                def get_dulwich_ssh_vendor():
+                    vendor = ParamikoSSHVendor(**ssh_kwargs)
+                    return vendor
 
-            # Recurse as needed.
-            for f in files:
-                if 'dir' == f[ 'type' ]:
-                    _listAllGithubFiles( f[ 'path' ], allPaths, repoParams )
-                elif 'file' == f[ 'type' ] and 0 != f[ 'size' ]:
-                    if self._maxSize is not None and f[ 'size' ] > self._maxSize:
-                        raise RuntimeError( "Maximum resource size reached." )
-                    allPaths.append( ( f[ 'path' ], f[ 'download_url' ] ) )
+                dulwich.client.get_ssh_vendor = get_dulwich_ssh_vendor
 
-        allPaths = []
-        _listAllGithubFiles( repoPath, allPaths, repoParams )
+                porcelain.clone(repo_url, target=tmp_dir_path, checkout=True)
 
-        def _downloadFile( filePath, fileUrl ):
-            hFile = self._getTempFile()
+                excludes = [".git"]
+                files_to_parse = []
+                for (dirpath, dirnames, filenames) in os.walk(tmp_dir_path, topdown=True):
+                    dirnames[:] = [dirname for dirname in dirnames if dirname not in excludes]
+                    files = [os.path.join(dirpath, f) for f in filenames]
+                    files_to_parse += files
 
-            response = requests.get( fileUrl, headers = headers )
-            response.raise_for_status()
+                for f in files_to_parse:
+                    with open(f,'r', errors="ignore") as file:
+                        file_path = os.path.relpath(f, tmp_dir_path)
+                        file_content = file.read()
+                        yield ( '%s%s' % ( file_path, file.name if file.name is not None else '', ), file_content )
+        else:
+            def _listAllGithubFiles( subPath, allPaths, repoParams ):
+                thisUrl = '%s%s%s%s' % ( fullUrl, '/' if subPath != '' else '', subPath, repoParams )
+                response = requests.get( thisUrl, headers = headers )
+                response.raise_for_status()
 
-            for data in response.iter_content( 1024 * 512 ):
-                hFile.write( data )
+                files = response.json()
 
-            hFile.flush()
-            hFile.seek( 0 )
+                # If the listing path was a single file
+                # we normalize it.
+                if isinstance( files, dict ):
+                    files = [ files ]
 
-            return ( filePath, hFile )
+                # Recurse as needed.
+                for f in files:
+                    if 'dir' == f[ 'type' ]:
+                        _listAllGithubFiles( f[ 'path' ], allPaths, repoParams )
+                    elif 'file' == f[ 'type' ] and 0 != f[ 'size' ]:
+                        if self._maxSize is not None and f[ 'size' ] > self._maxSize:
+                            raise RuntimeError( "Maximum resource size reached." )
+                        allPaths.append( ( f[ 'path' ], f[ 'download_url' ] ) )
 
-        for result in self._parallelExec( lambda x: _downloadFile( x[ 0 ], x[ 1 ] ), allPaths, maxConcurrent = self._maxConcurrent ):
-            if isinstance( result, Exception ):
-                raise result
+            allPaths = []
+            _listAllGithubFiles( repoPath, allPaths, repoParams )
 
-            filePath, hFile = result
+            def _downloadFile( filePath, fileUrl ):
+                hFile = self._getTempFile()
 
-            for fileName, fileContent in self._multiplexContent( hFile ):
-                # We explode archives through multiplexing here too
-                # so we generate a new subpath to report.
-                yield ( '%s%s' % ( filePath, fileName if fileName is not None else '', ), fileContent )
+                response = requests.get( fileUrl, headers = headers )
+                response.raise_for_status()
+
+                for data in response.iter_content( 1024 * 512 ):
+                    hFile.write( data )
+
+                hFile.flush()
+                hFile.seek( 0 )
+
+                return ( filePath, hFile )
+
+            for result in self._parallelExec( lambda x: _downloadFile( x[ 0 ], x[ 1 ] ), allPaths, maxConcurrent = self._maxConcurrent ):
+                if isinstance( result, Exception ):
+                    raise result
+
+                filePath, hFile = result
+
+                for fileName, fileContent in self._multiplexContent( hFile ):
+                    # We explode archives through multiplexing here too
+                    # so we generate a new subpath to report.
+                    yield ( '%s%s' % ( filePath, fileName if fileName is not None else '', ), fileContent )
 
     def _multiplexContent( self, hFile ):
         # Start testing different formats.
