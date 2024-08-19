@@ -11,7 +11,7 @@ import tarfile
 import zipfile
 import google.cloud.storage
 from google.oauth2 import service_account
-from paramiko import RSAKey
+from paramiko import RSAKey, DSSKey, ECDSAKey, Ed25519Key
 import dulwich
 from dulwich import porcelain
 from dulwich.contrib.paramiko_vendor import ParamikoSSHVendor
@@ -225,13 +225,13 @@ class AuthenticatedResourceLocator( object ):
                 repo_url = "git@github.com:%s/%s.git" % (repoOwner, repoName)
                 private_key = self._authData
 
-                tmp = tempfile.NamedTemporaryFile()
-                with open(tmp.name, 'w') as f:
-                    f.write(private_key) 
-                    f.seek(0)
-
-                # TODO: Investigate how to support multiple key algorithms (ECDSA)
-                pkey = RSAKey(filename=tmp.name)
+                pkey = None
+                for pkey_class in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+                    try:
+                        pkey = pkey_class.from_private_key(private_key)
+                        break
+                    except:
+                        pass
                 ssh_kwargs = {"pkey": pkey}
 
                 def get_dulwich_ssh_vendor():
