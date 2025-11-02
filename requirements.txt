@@ -3,7 +3,7 @@ cachetools==5.4.0
 certifi==2024.7.4
 cffi==1.17.0
 charset-normalizer==3.3.2
-cryptography==43.0.1
+cryptography==44.0.1
 dulwich==0.22.1
 gevent==24.2.1
 google-api-core==2.19.1
@@ -20,7 +20,7 @@ packaging==24.1
 paramiko==3.4.1
 pluggy==1.5.0
 proto-plus==1.24.0
-protobuf==5.29.4
+protobuf==5.29.5
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pycparser==2.22
