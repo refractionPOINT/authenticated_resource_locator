@@ -26,8 +26,8 @@ pyasn1_modules==0.4.0
 pycparser==2.22
 PyNaCl==1.5.0
 pytest==8.3.2
-requests==2.32.3
+requests==2.32.4
 rsa==4.9
-urllib3==2.2.2
+urllib3==2.5.0
 zope.event==5.0
 zope.interface==7.0.1
