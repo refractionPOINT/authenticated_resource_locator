@@ -11,7 +11,7 @@ import tarfile
 import zipfile
 import google.cloud.storage
 from google.oauth2 import service_account
-from paramiko import RSAKey, DSSKey, ECDSAKey, Ed25519Key
+from paramiko import RSAKey, ECDSAKey, Ed25519Key
 import dulwich
 from dulwich import porcelain
 from dulwich.contrib.paramiko_vendor import ParamikoSSHVendor
@@ -226,7 +226,7 @@ class AuthenticatedResourceLocator( object ):
                 private_key = self._authData
 
                 pkey = None
-                for pkey_class in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+                for pkey_class in (RSAKey, ECDSAKey, Ed25519Key):
                     try:
                         pkey = pkey_class.from_private_key(private_key)
                         break
