@@ -93,7 +93,7 @@ def test_githubRootNoAuth():
     assert( 0 != nElemFound )
 
 def test_githubSubdirNoAuth():
-    testArl = "[github,refractionPOINT/sigma/rules/windows/builtin]"
+    testArl = "[github,refractionPOINT/sigma-limacharlie/scripts]"
     nElemFound = 0
     with ARL( testArl ) as r:
         for fileName, fileContent in r:
@@ -103,7 +103,7 @@ def test_githubSubdirNoAuth():
     assert( 0 != nElemFound )
 
 def test_githubSigleFileNoAuth():
-    testArl = "[github,refractionPOINT/sigma/README.md]"
+    testArl = "[github,refractionPOINT/sigma-limacharlie/README.md]"
     nElemFound = 0
     with ARL( testArl ) as r:
         for fileName, fileContent in r:
@@ -125,7 +125,7 @@ def test_githubSigleFileNoAuth():
 #     assert( 0 != nElemFound )
 
 def test_githubBranch():
-    testArl = "[github,refractionPOINT/sigma/lc-rules/windows_sysmon/?ref=lc-rules]"
+    testArl = "[github,refractionPOINT/sigma-limacharlie/latest/windows_sysmon/?ref=rules]"
     nElemFound = 0
     with ARL( testArl ) as r:
         for fileName, fileContent in r:
