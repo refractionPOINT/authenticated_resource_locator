@@ -4,7 +4,7 @@ certifi==2024.7.4
 cffi==2.0.0
 charset-normalizer==3.3.2
 cryptography==46.0.7
-dulwich==0.22.1
+dulwich==1.2.5
 gevent==24.2.1
 google-api-core==2.19.1
 google-auth==2.33.0
