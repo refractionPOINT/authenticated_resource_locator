@@ -14,7 +14,7 @@ from google.oauth2 import service_account
 from paramiko import RSAKey, ECDSAKey, Ed25519Key
 import dulwich
 from dulwich import porcelain
-from dulwich.contrib.paramiko_vendor import ParamikoSSHVendor
+from .paramiko_vendor import ParamikoSSHVendor
 
 class AuthenticatedResourceLocator( object ):
     _supportedMethods = {
